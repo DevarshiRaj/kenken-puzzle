@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KenKen Puzzle Solver & Player</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-color: #eef2f7;
+      --text-color: #2c3e50;
+      --primary: #007acc;
+      --primary-dark: #005f99;
+      --card-bg: #ffffff;
+      --cell-bg: #ffffff;
+      --cell-border: #bdc3c7;
+      --cell-hover: #ecf0f1;
+      --cell-selected: #007acc;
+      --cell-selected-text: #ffffff;
+    }
+
+    body.dark-mode {
+      --bg-color: #1e272e;
+      --text-color: #f5f6fa;
+      --primary: #00a8ff;
+      --primary-dark: #0097e6;
+      --card-bg: #2f3640;
+      --cell-bg: #353b48;
+      --cell-border: #718093;
+      --cell-hover: #40739e;
+      --cell-selected: #00a8ff;
+      --cell-selected-text: #ffffff;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-color);
+    }
+
+    .theme-toggle {
+      float: right;
+      margin-top: -30px;
+      margin-right: 10px;
+    }
+
+    .explanation {
+      background: var(--card-bg);
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+    }
+
+    .controls, .cage-controls, .play-controls {
+      margin-bottom: 20px;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    input[type=number], select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 1rem;
+      background: var(--cell-bg);
+      color: var(--text-color);
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .grid-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: grid;
+      gap: 2px;
+      margin-top: 15px;
+    }
+
+    .cell {
+      width: 50px;
+      height: 50px;
+      background-color: var(--cell-bg);
+      border: 2px solid var(--cell-border);
+      text-align: center;
+      line-height: 50px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--text-color);
+      position: relative;
+    }
+
+    .cell:hover {
+      background-color: var(--cell-hover);
+    }
+
+    .cell.selected {
+      background-color: var(--cell-selected);
+      color: var(--cell-selected-text);
+    }
+
+    .cell-label {
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--text-color);
+      padding-top: 20px;
+      border-top: 1px solid #dfe6e9;
+    }
+
+    #metrics {
+      margin-top: 15px;
+      font-size: 1rem;
+      color: var(--text-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">🌙 Toggle Dark Mode</button>
+    </div>
+
+    <header>
+      <h1>KenKen Puzzle Solver & Interactive Player</h1>
+      <p class="subtitle">Solve and play KenKen puzzles with logic and fun!</p>
+    </header>
+
+    <section class="explanation">
+      <h2>What is a KenKen Puzzle?</h2>
+      <p>KenKen is a number puzzle game similar to Sudoku but with mathematical operations. Each puzzle consists of a grid (e.g., 4x4 or 6x6) divided into "cages." Each cage has a target number and a math operation. Your goal is to fill the grid with numbers from 1 to N such that:</p>
+      <ul>
+        <li>Each number appears only once per row and column.</li>
+        <li>Each cage satisfies the target and operation using its cell values.</li>
+      </ul>
+
+      <h3>Game Instructions:</h3>
+      <ol>
+        <li>Select a grid size and generate the board.</li>
+        <li>Click on cells to group them into a cage.</li>
+        <li>Assign a target number and operation (+, -, *, /).</li>
+        <li>Click "Add Cage" to save it.</li>
+        <li>Click "Solve Puzzle" to get the solution, or play manually!</li>
+      </ol>
+    </section>
+
+    <div class="controls">
+      <label for="gridSize">Grid Size:</label>
+      <input type="number" id="gridSize" value="4" min="3" max="6">
+      <button onclick="createGrid()">Create Grid</button>
+    </div>
+
+    <div class="grid-container">
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <div class="cage-controls">
+      <h3>Create a Cage</h3>
+      <p>Click on grid cells to select them. Then define the cage:</p>
+      <input type="number" id="cageTarget" placeholder="Target">
+      <select id="cageOp">
+        <option value="+">+</option>
+        <option value="-">-</option>
+        <option value="*">*</option>
+        <option value="/">/</option>
+      </select>
+      <button onclick="addCage()">Add Cage</button>
+      <p><strong>Selected Cells:</strong> <span id="selectedCells">None</span></p>
+    </div>
+
+    <div class="play-controls">
+      <button onclick="solveKenKen()">Solve Puzzle</button>
+      <button onclick="resetGame()">Reset Game</button>
+      <div id="metrics"></div>
+    </div>
+
+    <h2>Solution:</h2>
+    <div id="solution" class="grid"></div>
+
+    <footer>
+      <p><strong>Project:</strong> KenKen Puzzle Solver using Logic and Backtracking | Made with HTML, CSS & JavaScript</p>
+    </footer>
+  </div>
+
+  <script>
+    let size = 4;
+    let cages = [];
+    let selectedCells = [];
+    let cageColors = [];
+    let steps = 0;
+
+    function createGrid() {
+      size = parseInt(document.getElementById("gridSize").value);
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+      grid.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+      grid.style.gridTemplateRows = `repeat(${size}, 50px)`;
+      selectedCells = [];
+      cages = [];
+      cageColors = [];
+      for (let i = 0; i < size * size; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.addEventListener("click", () => toggleCell(cell));
+        grid.appendChild(cell);
+      }
+      document.getElementById("selectedCells").textContent = "None";
+      document.getElementById("solution").innerHTML = "";
+      document.getElementById("metrics").textContent = "";
+    }
+
+    function toggleCell(cell) {
+      const index = parseInt(cell.dataset.index);
+      if (selectedCells.includes(index)) {
+        selectedCells = selectedCells.filter(i => i !== index);
+        cell.classList.remove("selected");
+      } else {
+        selectedCells.push(index);
+        cell.classList.add("selected");
+      }
+      document.getElementById("selectedCells").textContent = selectedCells.join(", ");
+    }
+
+    function addCage() {
+      const target = parseInt(document.getElementById("cageTarget").value);
+      const operation = document.getElementById("cageOp").value;
+      if (!selectedCells.length || isNaN(target)) return alert("Select cells and enter target.");
+      if ((operation === '-' || operation === '/') && selectedCells.length !== 2)
+        return alert("'-' and '/' cages must have exactly 2 cells.");
+      cages.push({ cells: [...selectedCells], target, operation });
+      const color = `hsl(${Math.random() * 360}, 70%, 80%)`;
+      cageColors.push(color);
+      selectedCells.forEach(i => {
+        const cell = document.querySelector(`[data-index='${i}']`);
+        cell.classList.remove("selected");
+        cell.style.backgroundColor = color;
+      });
+      const labelCell = document.querySelector(`[data-index='${selectedCells[0]}']`);
+      const label = document.createElement("div");
+      label.classList.add("cell-label");
+      label.textContent = `${target}${operation}`;
+      labelCell.appendChild(label);
+      selectedCells = [];
+      document.getElementById("selectedCells").textContent = "None";
+      alert("Cage added!");
+    }
+
+    function resetGame() {
+      cages = [];
+      selectedCells = [];
+      cageColors = [];
+      steps = 0;
+      document.getElementById("selectedCells").textContent = "None";
+      document.getElementById("solution").innerHTML = "";
+      document.getElementById("metrics").textContent = "";
+      createGrid();
+    }
+
+    function solveKenKen() {
+      const solution = Array(size).fill(0).map(() => Array(size).fill(0));
+      steps = 0;
+      const start = performance.now();
+      const solved = solveUtil(solution, 0, 0);
+      const end = performance.now();
+      if (solved) {
+        renderSolution(solution);
+        document.getElementById("metrics").textContent = `Solved in ${Math.round(end - start)}ms with ${steps} steps.`;
+      } else {
+        alert("No solution found!");
+      }
+    }
+
+    function renderSolution(board) {
+      const solDiv = document.getElementById("solution");
+      solDiv.innerHTML = "";
+      solDiv.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+      solDiv.style.gridTemplateRows = `repeat(${size}, 50px)`;
+      board.flat().forEach(val => {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.textContent = val;
+        solDiv.appendChild(cell);
+      });
+    }
+
+    function solveUtil(board, row, col) {
+      if (row === size) return validateCages(board);
+      const [nextRow, nextCol] = col === size - 1 ? [row + 1, 0] : [row, col + 1];
+      for (let num = 1; num <= size; num++) {
+        steps++;
+        if (isValid(board, row, col, num)) {
+          board[row][col] = num;
+          if (solveUtil(board, nextRow, nextCol)) return true;
+          board[row][col] = 0;
+        }
+      }
+      return false;
+    }
+
+    function isValid(board, row, col, num) {
+      for (let i = 0; i < size; i++) {
+        if (board[row][i] === num || board[i][col] === num) return false;
+      }
+      return true;
+    }
+
+    function validateCages(board) {
+      for (const cage of cages) {
+        const values = cage.cells.map(i => {
+          const r = Math.floor(i / size);
+          const c = i % size;
+          return board[r][c];
+        });
+        const result = evaluate(values, cage.operation);
+        if (result !== cage.target) return false;
+      }
+      return true;
+    }
+
+    function evaluate(nums, op) {
+      nums.sort((a, b) => b - a);
+      switch (op) {
+        case '+': return nums.reduce((a, b) => a + b);
+        case '*': return nums.reduce((a, b) => a * b);
+        case '-': return nums.reduce((a, b) => a - b);
+        case '/': return nums.reduce((a, b) => a / b);
+        default: return 0;
+      }
+    }
+
+    function toggleTheme() {
+      const body = document.body;
+      const mode = body.classList.toggle("dark-mode") ? "dark" : "light";
+      localStorage.setItem("theme", mode);
+    }
+
+    window.onload = () => {
+      createGrid();
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-mode");
+      }
+    };
+  </script>
+</body>
+</html>
